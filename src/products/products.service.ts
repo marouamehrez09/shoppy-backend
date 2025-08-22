@@ -5,13 +5,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { PRODUCT_IMAGES } from './product-images';
-import { ProductGateway } from './products.gateway';
+import { ProductsGateway } from './products.gateway';
 
 @Injectable()
 export class ProductsService {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly productsGateway: ProductGateway,
+    private readonly productsGateway: ProductsGateway,
   ) {}
 
   async createProduct(data: CreateProductRequest, userId: number) {

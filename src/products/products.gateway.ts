@@ -8,12 +8,12 @@ import { AuthService } from 'src/auth/auth.service';
 
 @WebSocketGateway({
   cors: {
-    origin: 'https://shoppy-ui-app.vercel.app', // Explicitly allow your frontend origin
+    origin: ['https://shoppy-ui-app.vercel.app', 'http://localhost:3000'], // no trailing slash
     methods: ['GET', 'POST'],
-    credentials: true, // If your auth requires cookies or credentials
+    credentials: true,
   },
 })
-export class ProductGateway {
+export class ProductsGateway {
   constructor(private readonly authService: AuthService) {}
 
   @WebSocketServer()
@@ -25,8 +25,20 @@ export class ProductGateway {
 
   handleConnection(client: Socket) {
     try {
-      this.authService.verifyToken(client.handshake.auth.Authentication.value);
+      const auth = client.handshake.auth?.Authentication;
+      console.log('🔎 Received token object:', auth);
+
+      const token = typeof auth === 'string' ? auth : auth?.value; // ✅ extract value if object
+      if (!token) {
+        console.log('❌ No token provided');
+        throw new WsException('No token provided');
+      }
+
+      this.authService.verifyToken(token); // now a raw JWT string
+      console.log(`✅ Client connected: ${client.id}`);
     } catch (err) {
+      console.error('❌ Unauthorized client:', err.message);
+      client.disconnect();
       throw new WsException('Unauthorized.');
     }
   }
