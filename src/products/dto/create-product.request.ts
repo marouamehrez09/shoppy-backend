@@ -13,4 +13,7 @@ export class CreateProductRequest {
   @IsNumber()
   @Type(() => Number)
   price: number;
+
+  @IsString()
+  image: string;
 }

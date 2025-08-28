@@ -2,9 +2,6 @@ import { Prisma } from '@prisma/client';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductRequest } from './dto/create-product.request';
 import { PrismaService } from '../prisma/prisma.service';
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { PRODUCT_IMAGES } from './product-images';
 import { ProductsGateway } from './products.gateway';
 
 @Injectable()
@@ -15,9 +12,13 @@ export class ProductsService {
   ) {}
 
   async createProduct(data: CreateProductRequest, userId: number) {
+    // On enregistre directement l’URL Cloudinary
     const product = await this.prismaService.product.create({
       data: {
-        ...data,
+        name: data.name,
+        price: data.price,
+        description: data.description,
+        imageUrl: data.image, // ✅ Cloudinary URL
         userId,
       },
     });
@@ -27,49 +28,30 @@ export class ProductsService {
 
   async getProducts(status?: string) {
     const args: Prisma.ProductFindManyArgs = {};
-    if (status == 'availible') {
+    if (status === 'availible') {
       args.where = { sold: false };
     }
+
     const products = await this.prismaService.product.findMany(args);
-    return Promise.all(
-      products.map(async (product) => ({
-        ...product,
-        image: await this.imageExists(product.id),
-      })),
-    );
+    // On renvoie directement l’URL stockée dans la BDD
+    return products;
   }
 
   async getProduct(productId: number) {
     try {
-      return {
-        ...(await this.prismaService.product.findFirstOrThrow({
-          where: { id: productId },
-        })),
-        imageExists: await this.imageExists(productId),
-      };
+      return await this.prismaService.product.findFirstOrThrow({
+        where: { id: productId },
+      });
     } catch (err) {
       throw new NotFoundException(`Product not found with ID ${productId}`);
     }
   }
 
   async update(productId: number, data: Prisma.ProductUpdateInput) {
-    console.log(data);
     await this.prismaService.product.update({
       where: { id: productId },
       data,
     });
     this.productsGateway.handleProductUpdated();
-  }
-
-  private async imageExists(productId: number) {
-    try {
-      await fs.access(
-        join(`${PRODUCT_IMAGES}/${productId}.jpg`),
-        fs.constants.F_OK,
-      );
-      return true;
-    } catch (err) {
-      return false;
-    }
   }
 }
