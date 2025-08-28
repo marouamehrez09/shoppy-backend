@@ -18,7 +18,7 @@ export class ProductsService {
         name: data.name,
         price: data.price,
         description: data.description,
-        imageUrl: data.image, // ✅ Cloudinary URL
+        image: data.image, // ✅ Cloudinary URL
         userId,
       },
     });
