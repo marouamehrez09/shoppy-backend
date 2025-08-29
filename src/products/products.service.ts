@@ -18,7 +18,7 @@ export class ProductsService {
         name: data.name,
         price: data.price,
         description: data.description,
-        image: data.image, // ✅ Cloudinary URL
+        image: data.image,
         userId,
       },
     });
@@ -48,6 +48,7 @@ export class ProductsService {
   }
 
   async update(productId: number, data: Prisma.ProductUpdateInput) {
+    console.log('data', data);
     await this.prismaService.product.update({
       where: { id: productId },
       data,

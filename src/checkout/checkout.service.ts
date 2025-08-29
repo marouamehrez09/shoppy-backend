@@ -38,12 +38,14 @@ export class CheckoutService {
 
   async handleCheckoutWebhook(event: any) {
     console.log('event', event);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (event.type !== 'checkout.session.completed') {
       return;
     }
 
     const session = await this.stripe.checkout.sessions.retrieve(
-      event.data.object.id,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      event?.data?.object?.id,
     );
 
     const productId = session.metadata?.productId;
