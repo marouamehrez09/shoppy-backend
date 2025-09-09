@@ -15,7 +15,7 @@ export class CheckoutService {
     const product = await this.productService.getProduct(productId);
     return this.stripe.checkout.sessions.create({
       metadata: {
-        productId,
+        productId: product.id.toString(),
       },
       line_items: [
         {
@@ -37,7 +37,7 @@ export class CheckoutService {
   }
 
   async handleCheckoutWebhook(event: any) {
-    console.log('event', event);
+    //console.log('event', event);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (event.type !== 'checkout.session.completed') {
       return;
@@ -45,7 +45,7 @@ export class CheckoutService {
 
     const session = await this.stripe.checkout.sessions.retrieve(
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      event?.data?.object?.id,
+      event.data.object.id,
     );
 
     const productId = session.metadata?.productId;
@@ -54,6 +54,8 @@ export class CheckoutService {
       throw new Error('Product ID is missing in session metadata');
     }
 
-    await this.productService.update(parseInt(productId), { sold: true });
+    await this.productService.update(parseInt(productId), {
+      sold: true,
+    });
   }
 }

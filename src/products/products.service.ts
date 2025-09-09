@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductRequest } from './dto/create-product.request';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductsGateway } from './products.gateway';
+import { promises as fs } from 'fs';
 
 @Injectable()
 export class ProductsService {
@@ -54,5 +55,14 @@ export class ProductsService {
       data,
     });
     this.productsGateway.handleProductUpdated();
+  }
+
+  private async imageExists(productId: number): Promise<boolean> {
+    try {
+      await fs.access(`./public/images/${productId}.jpg`, fs.constants.F_OK);
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
 }
