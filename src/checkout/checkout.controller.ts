@@ -1,7 +1,8 @@
 import { CreateSessionRequest } from './dto/create-session.request';
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CheckoutService } from './checkout.service';
+import type { Request, Response } from 'express';
 
 @Controller('checkout')
 export class CheckoutController {
@@ -14,7 +15,7 @@ export class CheckoutController {
   }
 
   @Post('webhook')
-  async handleCheckoutWebhooks(@Body() event: any) {
-    return this.checkoutService.handleCheckoutWebhook(event);
+  async handleCheckoutWebhooks(@Req() req: Request, @Res() res: Response) {
+    return this.checkoutService.handleCheckoutWebhook(req, res);
   }
 }
