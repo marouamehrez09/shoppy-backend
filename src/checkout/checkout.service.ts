@@ -1,27 +1,15 @@
 import { ConfigService } from '@nestjs/config';
 import { ProductsService } from './../products/products.service';
 import { Injectable } from '@nestjs/common';
-import type { Request, Response } from 'express';
 import Stripe from 'stripe';
 
 @Injectable()
 export class CheckoutService {
-  private stripe: Stripe;
-
   constructor(
-    productService: ProductsService,
+    private readonly stripe: Stripe,
+    private readonly productService: ProductsService,
     private readonly configService: ConfigService,
-  ) {
-    this.stripe = new Stripe(
-      this.configService.getOrThrow('STRIPE_SECRET_KEY'),
-      {
-        apiVersion: '2025-07-30.basil',
-      },
-    );
-    this.productService = productService;
-  }
-
-  private readonly productService: ProductsService;
+  ) {}
 
   async createSession(productId: number) {
     const product = await this.productService.getProduct(productId);
@@ -49,43 +37,26 @@ export class CheckoutService {
     });
   }
 
-  async handleCheckoutWebhook(req: Request, res: Response) {
-    const sig = req.headers['stripe-signature'];
-    let event: Stripe.Event;
-
-    try {
-      event = this.stripe.webhooks.constructEvent(
-        req.body as Buffer, // ⚠️ raw body
-        sig as string,
-        this.configService.getOrThrow('STRIPE_WEBHOOK_SECRET'),
-      );
-    } catch (err) {
-      console.error(
-        '❌ Webhook signature verification failed:',
-        (err as Error).message,
-      );
-      return res.status(400).send(`Webhook Error: ${(err as Error).message}`);
+  async handleCheckoutWebhook(event: any) {
+    //console.log('event', event);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (event.type !== 'checkout.session.completed') {
+      return;
     }
 
-    // Vérifier le type d’événement
-    if (event.type === 'checkout.session.completed') {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      const session = event.data.object as Stripe.Checkout.Session;
+    const session = await this.stripe.checkout.sessions.retrieve(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      event.data.object.id,
+    );
 
-      const productId = session.metadata?.productId;
-      if (!productId) {
-        console.error('❌ Product ID is missing in session metadata');
-        return res.status(400).send('Product ID missing');
-      }
+    const productId = session.metadata?.productId;
 
-      // Marquer le produit comme vendu
-      await this.productService.update(parseInt(productId), {
-        sold: true,
-      });
-
-      console.log(`✅ Product ${productId} marked as sold.`);
+    if (!productId) {
+      throw new Error('Product ID is missing in session metadata');
     }
 
-    return res.json({ received: true });
+    await this.productService.update(parseInt(productId), {
+      sold: true,
+    });
   }
 }
