@@ -24,22 +24,23 @@ export class ProductsGateway {
   }
 
   handleConnection(client: Socket) {
+    const auth = client.handshake.auth?.Authentication;
+    console.log('🔎 Received token object:', auth);
+
+    const token = typeof auth === 'string' ? auth : auth?.value; // extract value if object
+
+    if (!token) {
+      console.log('⚠️ No token provided, connecting as guest');
+      // Don't throw, just allow connection
+      return;
+    }
+
     try {
-      const auth = client.handshake.auth?.Authentication;
-      console.log('🔎 Received token object:', auth);
-
-      const token = typeof auth === 'string' ? auth : auth?.value; // ✅ extract value if object
-      if (!token) {
-        console.log('❌ No token provided');
-        throw new WsException('No token provided');
-      }
-
-      this.authService.verifyToken(token); // now a raw JWT string
+      this.authService.verifyToken(token); // verify token only if present
       console.log(`✅ Client connected: ${client.id}`);
     } catch (err) {
       console.error('❌ Unauthorized client:', err.message);
       client.disconnect();
-      throw new WsException('Unauthorized.');
     }
   }
 }

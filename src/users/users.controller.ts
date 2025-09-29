@@ -16,7 +16,10 @@ export class UsersController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  getMe(@CurrentUser() user: TokenPayload) {
-    return user;
+  async getMe(@CurrentUser() token: TokenPayload) {
+    // aller chercher l'utilisateur complet dans la base
+    return this.usersService.getUser({
+      id: token.userId,
+    });
   }
 }

@@ -4,9 +4,11 @@ import { CheckoutService } from './checkout.service';
 import Stripe from 'stripe';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProductsModule } from '../products/products.module';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { OrdersModule } from 'src/orders/orders.module';
 
 @Module({
-  imports: [ConfigModule, ProductsModule],
+  imports: [ConfigModule, ProductsModule, PrismaModule, OrdersModule],
   controllers: [CheckoutController],
   providers: [
     CheckoutService,

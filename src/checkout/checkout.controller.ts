@@ -2,6 +2,8 @@ import { CreateSessionRequest } from './dto/create-session.request';
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CheckoutService } from './checkout.service';
+import { CurrentUser } from 'src/auth/current-user.decorator';
+import type { TokenPayload } from 'src/auth/token-payload.interface';
 
 @Controller('checkout')
 export class CheckoutController {
@@ -9,8 +11,11 @@ export class CheckoutController {
 
   @Post('session')
   @UseGuards(JwtAuthGuard)
-  async createSession(@Body() request: CreateSessionRequest) {
-    return this.checkoutService.createSession(request.productId);
+  async createSession(
+    @Body() request: CreateSessionRequest,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    return this.checkoutService.createSession(request.productId, user.userId);
   }
 
   @Post('webhook')

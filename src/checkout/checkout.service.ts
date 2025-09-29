@@ -2,6 +2,8 @@ import { ConfigService } from '@nestjs/config';
 import { ProductsService } from './../products/products.service';
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { OrdersService } from 'src/orders/orders.service';
 
 @Injectable()
 export class CheckoutService {
@@ -9,14 +11,17 @@ export class CheckoutService {
     private readonly stripe: Stripe,
     private readonly productService: ProductsService,
     private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
+    private readonly ordersService: OrdersService,
   ) {}
 
-  async createSession(productId: number) {
+  async createSession(productId: number, userId: number) {
     const product = await this.productService.getProduct(productId);
 
     return this.stripe.checkout.sessions.create({
       metadata: {
         productId: product.id.toString(),
+        userId: userId.toString(),
       },
       line_items: [
         {
@@ -50,13 +55,16 @@ export class CheckoutService {
     );
 
     const productId = session.metadata?.productId;
+    const userId = session.metadata?.userId;
 
-    if (!productId) {
-      throw new Error('Product ID is missing in session metadata');
+    if (!productId || !userId) {
+      throw new Error('Product ID or User ID missing in session metadata');
     }
 
-    await this.productService.update(parseInt(productId), {
-      sold: true,
-    });
+    // marquer produit comme vendu
+    await this.productService.update(parseInt(productId), { sold: true });
+
+    // créer une commande
+    await this.ordersService.create(parseInt(userId), parseInt(productId));
   }
 }

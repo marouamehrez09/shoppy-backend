@@ -34,6 +34,12 @@ export class UsersService {
   async getUser(filter: Prisma.UserWhereUniqueInput) {
     return this.prismaService.user.findUniqueOrThrow({
       where: filter,
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        password: true,
+      },
     });
   }
 }

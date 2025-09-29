@@ -14,6 +14,8 @@ model User {
   email    String   @unique
   password     String
   products Product[]
+  role     String    @default("USER") 
+  orders   Order[]
 }
 
 model Product {
@@ -25,4 +27,14 @@ model Product {
   userId Int 
   sold Boolean @default(false)
   image String?
+  orders      Order[]
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  createdAt DateTime @default(now())
 }
