@@ -12,6 +12,8 @@ import { CreateProductRequest } from './dto/create-product.request';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { ProductsService } from './products.service';
 import type { TokenPayload } from '../auth/token-payload.interface';
+import { Put, Delete } from '@nestjs/common';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('products')
 export class ProductsController {
@@ -36,4 +38,22 @@ export class ProductsController {
   async getProduct(@Param('productId') productId: string) {
     return this.productsService.getProduct(+productId);
   }
+
+  @Put(':productId')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async updateProduct(
+    @Param('productId') productId: string,
+    @Body() body: any,
+  ) {
+    await this.productsService.update(parseInt(productId), body);
+    return { success: true };
+  }
+
+  @Delete(':productId')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async deleteProduct(@Param('productId') productId: string) {
+    this.productsService.deleteProduct(+productId);
+    return { success: true };
+  }
+  Z;
 }

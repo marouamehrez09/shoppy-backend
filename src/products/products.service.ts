@@ -57,6 +57,13 @@ export class ProductsService {
     this.productsGateway.handleProductUpdated();
   }
 
+  async deleteProduct(productId: number) {
+    await this.prismaService.product.delete({
+      where: { id: productId },
+    });
+    this.productsGateway.handleProductUpdated(); // notifier en temps réel
+  }
+
   private async imageExists(productId: number): Promise<boolean> {
     try {
       await fs.access(`./public/images/${productId}.jpg`, fs.constants.F_OK);
