@@ -19,4 +19,10 @@ export class OrdersService {
       orderBy: { createdAt: 'desc' },
     });
   }
+  async findAll() {
+    return this.prisma.order.findMany({
+      include: { product: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

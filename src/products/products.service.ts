@@ -1,5 +1,9 @@
 import { Prisma } from '@prisma/client';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProductRequest } from './dto/create-product.request';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductsGateway } from './products.gateway';
@@ -58,10 +62,24 @@ export class ProductsService {
   }
 
   async deleteProduct(productId: number) {
+    // Vérifier si le produit est lié à une commande
+    const existingOrder = await this.prismaService.order.findFirst({
+      where: { productId },
+    });
+
+    if (existingOrder) {
+      throw new BadRequestException(
+        'Impossible de supprimer : le produit est lié à une commande.',
+      );
+    }
+
+    // Supprimer le produit sinon
     await this.prismaService.product.delete({
       where: { id: productId },
     });
-    this.productsGateway.handleProductUpdated(); // notifier en temps réel
+
+    // Notifier les clients en temps réel
+    this.productsGateway.handleProductUpdated();
   }
 
   private async imageExists(productId: number): Promise<boolean> {

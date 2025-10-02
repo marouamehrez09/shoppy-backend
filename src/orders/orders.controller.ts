@@ -14,4 +14,10 @@ export class OrdersController {
   async getMyOrders(@CurrentUser() user: TokenPayload) {
     return this.ordersService.findByUser(user.userId);
   }
+
+  @UseGuards(JwtAuthGuard) // 👈 tu peux remplacer ou ajouter un guard d'admin si nécessaire
+  @Get('all')
+  async getAllOrders() {
+    return this.ordersService.findAll();
+  }
 }

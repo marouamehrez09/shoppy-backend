@@ -52,8 +52,7 @@ export class ProductsController {
   @Delete(':productId')
   @UseGuards(JwtAuthGuard, AdminGuard)
   async deleteProduct(@Param('productId') productId: string) {
-    this.productsService.deleteProduct(+productId);
+    await this.productsService.deleteProduct(+productId);
     return { success: true };
   }
-  Z;
 }
