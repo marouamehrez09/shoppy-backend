@@ -21,7 +21,7 @@ export class OrdersService {
   }
   async findAll() {
     return this.prisma.order.findMany({
-      include: { product: true },
+      include: { product: true, user: true },
       orderBy: { createdAt: 'desc' },
     });
   }
