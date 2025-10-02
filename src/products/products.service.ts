@@ -53,12 +53,18 @@ export class ProductsService {
   }
 
   async update(productId: number, data: Prisma.ProductUpdateInput) {
-    console.log('data', data);
-    await this.prismaService.product.update({
+    // Convert price to number if it's provided as a string
+    if (typeof (data as any).price === 'string') {
+      (data as any).price = parseFloat((data as any).price);
+    }
+
+    const updated = await this.prismaService.product.update({
       where: { id: productId },
       data,
     });
+
     this.productsGateway.handleProductUpdated();
+    return updated;
   }
 
   async deleteProduct(productId: number) {
